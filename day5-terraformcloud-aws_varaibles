@@ -1,3 +1,10 @@
 AWS_ACCESS_KEY_ID
 AWS_REGION
 AWS_SECRET_ACCESS_KEY
+###while running if you are geeting an error like this 
+Initializing HCP Terraform...
+╷
+│ Error: Error asking for state migration action: input is disabled
+│ 
+│ 
+##in your terraform code 
