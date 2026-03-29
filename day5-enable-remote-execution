@@ -18,3 +18,59 @@
 git add .
 git commit -m "change the template version"
 git push orign main
+##c1.ec2-template.tf delete everything add line 23 till 38 change the template name to your previous name
+resource "aws_launch_template" "ec2_instance" {
+  name_prefix   = "gopal-web-launch-template"
+  image_id      = data.aws_ami.amazon_linux.id
+  instance_type = var.instance_type["dev"]
+  update_default_version = true #we are upding the default version
+
+  key_name               = "gopal"
+  vpc_security_group_ids = [aws_security_group.web_sg.id]
+ user_data = base64encode(<<EOF
+#!/bin/bash
+yum install httpd -y
+systemctl start httpd
+systemctl enable httpd
+echo "Hello from Auto Scaling $HOSTNAME" > /var/www/html/index.html
+EOF
+)
+}
+#also this need to be reflected in c2.autosclaing.tf change line 44 to your name and change line 66 to your name
+resource "aws_autoscaling_group" "web" {
+  desired_capacity = 2
+  max_size         = 4
+  min_size = 2 #it should create two instances at the time of creation of autoscaling group and it can scale up to 4 instances and it will not scale down below 2 instances
+  name              = "gopal-autoscaling-group"
+  #i want that the instance should be deployed in two az 
+  vpc_zone_identifier = values(aws_subnet.sky_subnet)[*].id #this is the subnet where the autoscaling group will be created
+  target_group_arns = [ aws_lb_target_group.app_tg.arn ]
+  health_check_type = "ELB" #this is the health check type for the autoscaling group
+    launch_template {
+        id      = aws_launch_template.ec2_instance.id 
+        version = aws_launch_template.ec2_instance.latest_version
+    }
+
+  instance_refresh {
+    strategy = "Rolling"
+
+    preferences {
+      min_healthy_percentage = 50
+    }
+
+    triggers = ["launch_template"]
+  }
+
+   tag {
+     key                 = "Name"
+     value               = "gopal-autoscaling-group"
+     propagate_at_launch = true
+   
+  }
+}
+
+#finally do 
+git add .
+git commit -m "instance type modified "
+git push origin main
+
