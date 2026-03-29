@@ -11,3 +11,10 @@
     git add .
     git commit -m "change the environment to dev t2 micro instance"
     git push origin main
+#we need to modify the versioing in autoscalingroup 
+##go to c2 autoscaling.tf file 
+#in the launch template versioing it is showing $latest #replace it with "2"
+###after that
+git add .
+git commit -m "change the template version"
+git push orign main
